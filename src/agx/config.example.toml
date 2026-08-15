@@ -1,0 +1,15 @@
+# AGX — Antigravity Unified Management Suite Configuration
+# Location: ~/.config/agx/config.toml (or $XDG_CONFIG_HOME/agx/config.toml)
+
+[versions]
+# Target version locks (overrides default check in agx sync / agx doctor)
+target_cli_version = "1.1.13"
+target_ide_version = "2.5.5"
+
+[paths]
+# Optional path overrides (uncomment and customize if using non-standard directories)
+# gemini_dir = "~/.gemini"
+# cli_dir = "~/.gemini/antigravity-cli"
+# ide_dir = "~/.gemini/antigravity-ide"
+# ide_state_db = "~/.config/Antigravity IDE/User/globalStorage/state.vscdb"
+# backup_dir = "~/.local/share/agx/backups"

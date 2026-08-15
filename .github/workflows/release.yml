@@ -1,0 +1,75 @@
+name: Release Binaries
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: agx-linux-x86_64
+            binary_path: dist/agx
+          - os: macos-latest
+            artifact_name: agx-macos-arm64
+            binary_path: dist/agx
+          - os: windows-latest
+            artifact_name: agx-windows-x86_64.exe
+            binary_path: dist/agx.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build Binary (Linux / macOS)
+        if: runner.os != 'Windows'
+        run: |
+          uv run --with pyinstaller pyinstaller --onefile --name agx --add-data "src/agx/config.example.toml:agx" src/agx/main.py
+          mv dist/agx dist/${{ matrix.artifact_name }}
+
+      - name: Build Binary (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          uv run --with pyinstaller pyinstaller --onefile --name agx --add-data "src/agx/config.example.toml;agx" src/agx/main.py
+          mv dist/agx.exe dist/${{ matrix.artifact_name }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist/${{ matrix.artifact_name }}
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*
+          generate_release_notes: true
